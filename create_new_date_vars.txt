@@ -1,0 +1,87 @@
+#THIS PROGRAM READS IN THE ALLCALLS DATASET FROM A TXT FILE, THEN CREATES  
+#VARIABLES THAT INDICATE THE MONTH, DAY OF WEEK, AND HOUR OF A CALL
+#AND APPENDS THESE VARIABLES TO THE SAME ALLCALLS DATASET
+#THEN SOME PRELIMINARY BAR CHARTS ARE CONSTRUCTED TO GET A PRELIMINARY DETECTION 
+#OF CALL TRENDS
+
+
+
+library(ggvis, stringr)
+
+#SET WORKING DIRECTORY
+setwd("C:/Users/edupre/Desktop/NOLA_emergency/RAW")
+
+#READ IN CALL DATA AFTER GPS COORDINATES CONVERTED
+allcalls_date <- read.delim("allcalls.txt", header=TRUE, fill = TRUE, sep = '\t')
+tail(allcalls_date, n=10)
+#creating summaries for data to ensure proper uploading
+summary(allcalls_date)
+
+
+
+######
+#CREATING SPECIFIC VARIABLES FOR DAY AND MONTH FOR CREATE TIME VARIABLE
+allcalls_date$CrDay <- weekdays(as.POSIXct(allcalls_date$TimeCreate, format="%m/%d/%Y %T"))
+head(allcalls_date$CrDay, n=20)
+
+allcalls_date$CrMonth <- months(as.POSIXct(allcalls_date$TimeCreate, format="%m/%d/%Y %T"))
+head(allcalls_date$CrMonth, n=20)
+
+
+#CREATES HOUR VARIABLE FOR TIME CREATE VARIABLE
+#HOUR IS BETWEEN ' ' AND ':' SO THIS VALUE IS EXTRACTED THEN THE PUNCTUATION ARE STRIPPED
+allcalls_date$CrHour <- str_extract(allcalls_date$TimeCreate, "[:space:][:digit:]+[:punct:]")
+allcalls_date$CrHour <- as.integer(str_extract(allcalls_date$CrHour, "[:digit:]+"))
+head(allcalls_date$CrHour, n=20)
+
+
+########
+#CREATING SPECIFIC VARIABLES FOR DAY AND MONTH FOR DISPATCH TIME VARIABLE
+allcalls_date$DDay <- weekdays(as.POSIXct(allcalls_date$TimeDispat, format="%m/%d/%Y %T"))
+head(allcalls_date$DDay, n=20)
+
+allcalls_date$DMonth <- months(as.POSIXct(allcalls_date$TimeDispat, format="%m/%d/%Y %T"))
+head(allcalls_date$DMonth, n=20)
+
+
+#CREATES HOUR VARIABLE FOR TIME DISPATCH VARIABLE
+#HOUR IS BETWEEN ' ' AND ':' SO THIS VALUE IS EXTRACTED THEN THE PUNCTUATION ARE STRIPPED
+allcalls_date$DHour <- str_extract(allcalls_date$TimeDispat, "[:space:][:digit:]+[:punct:]")
+allcalls_date$DHour <- as.integer(str_extract(allcalls_date$DHour, "[:digit:]+"))
+head(allcalls_date$DHour, n=20)
+
+
+
+########
+#CREATING SPECIFIC VARIABLES FOR DAY, MONTH, AND HOUR FOR CLOSED TIME VARIABLES
+allcalls_date$ClDay <- weekdays(as.POSIXct(allcalls_date$TimeClosed, format="%m/%d/%Y %T"))
+head(allcalls_date$ClDay, n=10)
+
+allcalls_date$ClMonth <- months(as.POSIXct(allcalls_date$TimeClosed, format="%m/%d/%Y %T"))
+head(allcalls_date$ClMonth, n=10)
+
+#CREATES HOUR VARIABLE FOR TIME CLOSED VARIABLE
+#HOUR IS BETWEEN ' ' AND ':' SO THIS VALUE IS EXTRACTED THEN THE PUNCTUATION ARE STRIPPED
+allcalls_date$ClHour <- str_extract(allcalls_date$TimeClosed, "[:space:][:digit:]+[:punct:]")
+allcalls_date$ClHour <- as.integer(str_extract(allcalls_date$ClHour, "[:digit:]+"))
+head(allcalls_date$ClHour, n=20)
+
+
+#######
+#VISUALIZATION OF THE NEW VARIABLES
+allcalls_date %>% ggvis(~CrHour) %>% layer_bars()
+allcalls_date %>% ggvis(~CrDay) %>% layer_bars()
+allcalls_date %>% ggvis(~CrMonth) %>% layer_bars()
+
+
+#######
+#WRITE THE NEW DATABASE INTO TAB SEPARATED AND RDATA FORMATS
+write.table(allcalls_date, "C:/Users/edupre/Desktop/NOLA_emergency/RAW/allcalls_date.txt" ,
+            na="", sep="\t", quote=FALSE, row.names=FALSE )
+
+save(allcalls_date, file="C:/Users/edupre/Desktop/NOLA_emergency/RAW/allcalls_date.RData", compress="bzip2")
+
+
+
+
+
